@@ -60,4 +60,66 @@ object AdvancedPatternMatching extends App {
 
   println(mathProperty)
 
+  //  Infix patterns
+  //  In case head :: Nil, :: is an infix pattern
+  case class Or[A, B](a: A, b: B) // built in as either
+
+  val either = Or(2, "two")
+
+  val humanDescription = either match
+    // case Or(number, string) => s"$number is written as $string"
+    case number Or string => s"$number is written as $string" //equivalent
+
+  println(humanDescription)
+
+  //  decomposing sequences
+  val vararg = numbers match {
+    case List(1, _*) => "starting with 1" // _* is a vararg pattern
+  }
+  println(vararg)
+
+  abstract class MyList[+A] {
+    def head: A = ???
+
+    def tail: MyList[A] = ???
+  }
+
+  case object Empty extends MyList[Nothing]
+
+  case class Cons[+A](override val head: A, override val tail: MyList[A]) extends MyList[A]
+
+  object MyListPatterns {
+    def unapplySeq[A](list: MyList[A]): Option[Seq[A]] =
+      if (list == Empty) Some(Seq.empty)
+      else unapplySeq(list.tail).map(list.head +: _)
+  }
+
+  val myList: MyList[Int] = Cons(1, Cons(2, Cons(3, Empty)))
+  val decomposed = myList match
+    case MyListPatterns(1, 2, _*) => "Starts with 1, 2" // pattern is run on Option[Seq[A]] returned by unapplySeq
+    case _ => "something else"
+  println(decomposed)
+
+  //  custom return types for unapply
+  //  return type should have
+  //  -isEmpty: Boolean
+  //  -get: T
+  abstract class Wrapper[T] {
+    def isEmpty: Boolean
+
+    def get: T
+  }
+
+  object PersonWrapper {
+    def unapply(person: Person): Wrapper[String] = new Wrapper[String] {
+      override def isEmpty: Boolean = false
+
+      override def get: String = person.name
+    }
+  }
+
+  println(bob match
+    case PersonWrapper(n) => s"This person's name is $n"
+    case _ => "An alien"
+  )
 }
