@@ -1,5 +1,7 @@
 package lectures.Pt2AFP
 
+import scala.annotation.targetName
+
 object LazyEvaluation extends App {
 
   // val x: Int = throw new RuntimeException()
@@ -66,4 +68,42 @@ object LazyEvaluation extends App {
   gt20Lazy.foreach(println)
 
   // for-comprehensions use withFilter for guards (lazy)
+
+  /**
+   * Exercise: implement a lazily evaluated, singly linked STREAM of elements.
+   * naturals = MyStream.from(1)(x => x + 1) = stream of natural numbers (potentially infinite!)
+   * naturals.take(100).foreach(println) // lazily evaluated stream of the first 100 naturals (finite stream)
+   * naturals.foreach(println) // will crash - infinite!
+   * naturals.map(_ * 2) // stream of all even numbers (potentially infinite)
+   */
+  abstract class MyStream[+A] {
+    def isEmpty: Boolean
+
+    def head: A
+
+    def tail: MyStream[A]
+
+    @targetName("Prepend")
+    def #::[B >: A](element: B): MyStream[B]
+
+    @targetName("Concatenate")
+    def ++[B >: A](anotherStream: MyStream[B]): MyStream[B]
+
+    def foreach(f: A => Unit): Unit
+
+    def map[B](f: A => B): MyStream[B]
+
+    def flapMap[B](f: A => MyStream[B]): MyStream[B]
+
+    def filter(predicate: A => Boolean): MyStream[A]
+
+    // Take first n elements
+    def take(n: Int): MyStream[A]
+
+    def takeAsList(n: Int): List[A]
+  }
+
+  object MyStream {
+    def from[A](start: A)(generator: A => A): MyStream[A] = ???
+  }
 }
