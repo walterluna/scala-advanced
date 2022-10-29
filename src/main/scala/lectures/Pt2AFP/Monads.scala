@@ -51,4 +51,48 @@ object Monads extends App {
    }
    */
 
+  //  1) Lazy monad
+
+  class Lazy[+A](value: => A) {
+    //    call by need
+    private lazy val internalValue = value
+
+    def use: A = internalValue
+
+    def flatMap[B](f: (=> A) => Lazy[B]): Lazy[B] =
+      f(internalValue)
+  }
+
+  object Lazy {
+    def apply[A](value: => A): Lazy[A] = new Lazy[A](value)
+  }
+
+  val lazyInstance = Lazy {
+    println("Today I don't feel like doing anything")
+    42
+  }
+
+  //  println(lazyInstance.use)
+
+  val flatMappedInstance = lazyInstance.flatMap(x => Lazy {
+    10 + x
+  })
+  val flatMappedInstance2 = lazyInstance.flatMap(x => Lazy {
+    10 + x
+  })
+
+  flatMappedInstance.use
+  flatMappedInstance2.use
+
+  /*
+  // 2) Map and flatten in terms of flatMap
+  Monad[T] {
+    def flatMap[B](f: T => B): Monad[B] = ...(implemented)
+
+    // unit refers to the apply function (constructor)
+    def map[B](f: T => B): Monad[B] = flatMap( x => unit(f(x)))
+    def flatten(m: Monad[Monad[T]]): Monad[T] = m.flatMap((x: Monad[T]) => x)
+ }
+   */
+
 }
