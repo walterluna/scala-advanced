@@ -89,6 +89,7 @@ object JvmConcurrencyProblems extends App {
 
     message = "scala sucks"
     awesomeThread.start()
+    awesomeThread.start()
     Thread.sleep(1001)
     //  solution: join the worker thread
     println(message)
