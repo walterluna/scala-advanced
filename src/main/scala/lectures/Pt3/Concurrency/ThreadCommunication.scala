@@ -191,5 +191,77 @@ object ThreadCommunication extends App {
     (1 to nProducers).foreach(new Producer(_, buffer, capacity).start())
   }
 
-  multiProdCons(5, 5)
+  //  multiProdCons(5, 5)
+
+  /* EXERCISES
+  1) Think of a scenario when notify() and notifyAll() act differently
+  2) create a deadlock
+  3) create a livelock
+   */
+
+  //  notifyAll
+  def testNotifyAll(): Unit = {
+    val bell = new Object
+    (1 to 10).foreach(i => new Thread(() => {
+      bell.synchronized {
+        println(s"[thread $i] waiting...")
+        bell.wait()
+        println(s"[thread $i] Hooray, I woke up")
+      }
+    }).start())
+
+    new Thread(() => {
+      Thread.sleep(2000)
+      bell.synchronized {
+        println("[announcer] Rock and roll")
+        // bell.notify()
+        bell.notifyAll()
+      }
+    }).start()
+  }
+
+  //  testNotifyAll()
+
+  // 2 - deadlock
+  case class Friend(name: String) {
+    def bow(other: Friend) = {
+      this.synchronized {
+        println(s"$this: I am bowing to my friend $other")
+        other.rise(this)
+        println(s"$this: my friend $other has risen")
+      }
+    }
+
+    def rise(other: Friend) = {
+      this.synchronized {
+        println(s"$this: I am rising to my friend $other")
+      }
+    }
+
+    var side = "right"
+
+    def switchSide(): Unit = {
+      if (side == "right") side = "left"
+      else side = "right"
+    }
+
+    def pass(other: Friend): Unit = {
+      while (this.side == other.side) {
+        println(s"$this: Oh, but please, $other, feel free to pass...")
+        switchSide()
+        Thread.sleep(1000)
+      }
+    }
+  }
+
+  val sam = Friend("Sam")
+  val pierre = Friend("Pierre")
+
+  //  new Thread(() => sam.bow(pierre)).start() // sam's lock,    |  then pierre's lock
+  //  new Thread(() => pierre.bow(sam)).start() // pierre's lock  |  then sam's lock
+
+  // 3 - livelock
+  new Thread(() => sam.pass(pierre)).start()
+  new Thread(() => pierre.pass(sam)).start()
+
 }
