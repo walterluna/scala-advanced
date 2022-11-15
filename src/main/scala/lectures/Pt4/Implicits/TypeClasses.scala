@@ -58,7 +58,7 @@ object TypeClasses extends App {
     def apply(a: T, b: T): Boolean
   }
 
-  object PersonEqualByName extends Equal[User] {
+  implicit object PersonEqualByName extends Equal[User] {
     override def apply(a: User, b: User): Boolean =
       a.name == b.name
   }
@@ -68,4 +68,32 @@ object TypeClasses extends App {
       a.name == b.name && a.email == b.email
   }
 
+  //  Part 2
+
+  object HTMLSerializer {
+    def serialize[T](value: T)(implicit serializer: HTMLSerializer[T]): String =
+      serializer.serialize(value)
+
+    def apply[T](implicit serializer: HTMLSerializer[T]): HTMLSerializer[T] =
+      serializer
+  }
+
+  implicit object IntSerializer extends HTMLSerializer[Int] {
+    override def serialize(value: Int): String = s"<div>$value</div>"
+  }
+
+
+  println(HTMLSerializer.serialize(42))
+  println(HTMLSerializer.serialize(john))
+
+  //  Exercise: Implement the TypeClass pattern for the equality
+  object Equal {
+    def apply[T](a: T, b: T)(implicit equalizer: Equal[T]): Boolean =
+      equalizer.apply(a, b)
+  }
+
+  val otherJohn = User("John", 32, "otherJohn@rockthejvm.com")
+
+  println(Equal(john, otherJohn))
+  // ^^^ Ad Hoc polymorphism
 }
